@@ -668,7 +668,7 @@ def setup_paint_app(window):
     #다각형 자동완성 버튼
     button_polygonSelection = Button(button_frame, text="polygonSelection", command=set_polygonSelection_mode)
     button_polygonSelection.pack(side=LEFT)
-
+    
 #+=================================================================================
     menu_bar = Menu(window) # 메뉴 바 생성
     window.config(menu=menu_bar) # 윈도우에 매뉴바를 menu_bar로 설정
@@ -1231,7 +1231,33 @@ def end_polygonSelection(event):
 def set_polygonSelection_mode():
     canvas.bind("<Button-1>", start_polygonSelection)
 
-
+#그림 그리는 좌표 기록
+def start_draw(event):
+    global last_x, last_y
+    last_x, last_y = event.x, event.y
+#그림 그리기
+def draw(event):
+    global last_x, last_y
+    canvas.create_line((last_x, last_y, event.x, event.y), fill="black", width=1)
+    last_x, last_y = event.x, event.y
+#오른쪽 마우스 눌렀을 때 드래그 시작하는 지점 좌표 기록
+def start_move(event):
+    global last_x, last_y, is_moving
+    if event.num == 3:  # 오른쪽 버튼 클릭 여부 확인
+        last_x, last_y = event.x, event.y
+        is_moving = True
+#오른쪽 마우스 누르면 그려진 모든 요소들 이동
+def move(event):
+    global last_x, last_y, is_moving
+    if is_moving:
+        x_delta = event.x - last_x
+        y_delta = event.y - last_y
+        canvas.move("all", x_delta, y_delta)  # 그려진 모든 요소를 이동시킴
+        last_x, last_y = event.x, event.y
+#오른쪽 마우스 떼면 움직임 종료
+def end_move(event):
+    global is_moving
+    is_moving = False
 
 window = Tk()
 #Tk 객체를 생성하여 주 윈도우를 만들기
@@ -1242,6 +1268,16 @@ window.resizable(True, True)
 window.configure(bg="sky blue") #구별하기 위한 버튼 영역 색 변경
 setup_paint_app(window)
 editor = ImageEditor(canvas)
+
+# 그리기 이벤트 바인딩
+canvas.bind("<ButtonPress-1>", start_draw)
+canvas.bind("<B1-Motion>", draw)
+
+# 오른쪽 버튼 드래그 이벤트 바인딩
+canvas.bind("<ButtonPress-3>", start_move)
+canvas.bind("<B3-Motion>", move)
+canvas.bind("<ButtonRelease-3>", end_move)
+
 
 # 타이머 라벨
 timer_label = Label(window, text="Time: 0 s")

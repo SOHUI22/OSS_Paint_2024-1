@@ -615,9 +615,6 @@ def setup_paint_app(window):
 
     canvas.bind("<B3-Motion>", lambda event: erase(event, canvas))
 
-
-    # 
-
     #도형 모양 선택하는 버튼 생성
     button_choose_shape = Button(window, text="shape", command=choose_shape)
     button_choose_shape.bind("<Button-1>", choose_shape)  # 버튼 클릭 시 모양 선택 팝업 메뉴 표시
@@ -667,8 +664,10 @@ def setup_paint_app(window):
     canvas.bind("<ButtonRelease-1>", paint_end)
 
     set_paint_mode_normal(canvas)
-
     
+    #다각형 자동완성 버튼
+    button_polygonSelection = Button(button_frame, text="polygonSelection", command=set_polygonSelection_mode)
+    button_polygonSelection.pack(side=LEFT)
 
 #+=================================================================================
     menu_bar = Menu(window) # 메뉴 바 생성
@@ -1204,6 +1203,33 @@ def print_canvas_size(canvas):
     size = get_canvas_size(canvas)
     print("Canvas size:", size, "bytes")
 
+# 다각형 자동완성 관련 변수
+polygonSelection_points = [] #마우스로 클릭한 점 좌표 저장
+polygonSelection_mode = False #다각형 그리기 활성화 여부
+# 다각형 자동완성 관련 함수
+def start_polygonSelection(event):
+    global polygonSelection_mode, polygonSelection_points
+    polygonSelection_mode = True 
+    polygonSelection_points = [(event.x, event.y)] #현재 마우스 클릭 위치 리스트에
+    canvas.bind("<B1-Motion>", draw_polygonSelection)
+    canvas.bind("<ButtonRelease-1>", end_polygonSelection)
+
+def draw_polygonSelection(event):
+    global polygonSelection_points
+    if polygonSelection_mode:
+        polygonSelection_points.append((event.x, event.y)) 
+        if len(polygonSelection_points) > 1:
+            canvas.create_line(polygonSelection_points[-2], polygonSelection_points[-1], fill="black", width=1) #점들 사이 선으로 연결
+
+def end_polygonSelection(event):
+    global polygonSelection_mode, polygonSelection_points
+    polygonSelection_mode = False
+    if len(polygonSelection_points) > 2:
+        canvas.create_polygon(polygonSelection_points, outline="black", fill='', width=1)
+    polygonSelection_points = [] #리스트에 저장된 점 사용하여 다각형 그림
+
+def set_polygonSelection_mode():
+    canvas.bind("<Button-1>", start_polygonSelection)
 
 
 
